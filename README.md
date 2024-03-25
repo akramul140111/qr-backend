@@ -13,6 +13,9 @@
 - **DB_USER:root**
 - **PASS:**
 
+## Dependency
+- **React Frontend**
+
 
 ## Laravel Installation
 
