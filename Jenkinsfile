@@ -42,3 +42,11 @@ pipeline {
         }
     }
 }
+
+/** 
+Note: Please Change -Dsonar.projectKey=Laravel-backend \
+  -Dsonar.sources=. \
+  -Dsonar.host.url=http://13.250.115.10:9000 \
+  -Dsonar.login=sqp_79864c7ee2a46b925bdb7cbd60f2a8c306361ee3 from sonar qube for build it properly
+  **/
+  
