@@ -1,38 +1,54 @@
 version: "3.8"
 services:
-  # php service
-  php:
+  app:
     build:
-      context: .
-      target: php
+      context: ./  # Building the image from the current directory
+      dockerfile: Dockerfile  # Assuming your Dockerfile is named "Dockerfile"
       args:
-        - APP_ENV=${APP_ENV}
-    environment:
-      - APP_ENV=${APP_ENV}
-      - CONTAINER_ROLE=app
-
-    working_dir: /var/www
+        user: akramul  # Setting the user inside the container
+        uid: 1000  # Setting the user ID inside the container
+    image: laravel-test  # Name of the image to use (or build if Docker-compose exists)
+    container_name: app-laravel  # Name for the app container
+    restart: unless-stopped  # Restart policy in case the container exits
+    working_dir: /var/www  # Working directory within the container
     volumes:
-      - ./:/var/www
-    ports:
-      - 8000:8000
+      - ./:/var/www  # Mounting your local project directory
+    networks:  # Changed to an array
+      - mysql-network  # Name of the network to connect to (defined later)
     depends_on:
       - database
-  # database Server
+
   database:
-    image: mysql:8.0.37
-    ports: 
-      - 3306:3306
+    image: mysql:8.0.37  # Using the official MySQL image
+    container_name: db-mysql  # Name for the database container
+    restart: unless-stopped  # Restart policy
     environment:
-      - MYSQL_DATABASE=${DB_DATABASE}
-      - MYSQL_USER=${DB_USERNAME}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}  # Environment variable for database name
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}  # Environment variable for root password
+      MYSQL_PASSWORD: ${DB_PASSWORD}  # Environment variable for user password
+      MYSQL_USER: ${DB_USERNAME}  # Environment variable for database username
+      SERVICE_TAGS: dev  # Optional environment variable (not used by MySQL itself)
+      SERVICE_NAME: mysql  # Optional environment variable (not used by MySQL itself)
     volumes:
-      - db-data:/var/lib/mysql
-volumes:
-  db-data : ~
+      - ./docker-compose/mysql:/docker-entrypoint-initdb.d  # Mounting initialization scripts
+    networks:  # Changed to an array
+      - mysql-network  # Name of the network to connect to
+
+  nginx:
+    image: nginx:alpine  # Using the official Nginx image with Alpine base
+    container_name: nginx-laravel-test  # Name for the Nginx container
+    restart: unless-stopped  # Restart policy
+    ports:
+      - 8000:80  # Mapping port 8000 on the host to port 80 (HTTP) inside the container
+    volumes:
+      - ./:/var/www  # Mounting your local project directory
+      - ./docker-compose/nginx:/etc/nginx/conf.d/  # Mounting Nginx configuration files
+    networks:  # Changed to an array
+      - mysql-network  # Name of the network to connect to (defined later)
+    depends_on:
+      - app
+
 networks:
-  default:
-    name: mysql-network
-    driver: bridge
+  mysql-network:  # Defining the network
+    name: mysql-network  # Name for the network
+    driver: bridge  # Network driver (bridge for standard network)
