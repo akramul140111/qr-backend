@@ -1,0 +1,36 @@
+version: "3.8"
+services:
+  app:
+    build:
+      context: ./  # Building the image from the current directory
+      dockerfile: Dockerfile  # Assuming your Dockerfile is named "Dockerfile"
+      args:
+        user: akramul  # Setting the user inside the container
+        uid: 1000  # Setting the user ID inside the container
+    image: php-laravel  # Name of the image to use (or build if Docker-compose exists)
+    container_name: app-laravel  # Name for the app container
+    restart: unless-stopped  # Restart policy in case the container exits
+    working_dir: /var/www  # Working directory within the container
+    volumes:
+      - ./:/var/www  # Mounting your local project directory
+    networks:  # Changed to an array
+      - mysql-network  # Name of the network to connect to
+
+  nginx:
+    image: nginx:alpine  # Using the official Nginx image with Alpine base
+    container_name: Webserver-nginx  # Name for the Nginx container
+    restart: unless-stopped  # Restart policy
+    ports:
+      - 8000:80  # Mapping port 8000 on the host to port 80 (HTTP) inside the container
+    volumes:
+      - ./:/var/www  # Mounting your local project directory
+      - ./docker-compose/nginx:/etc/nginx/conf.d/  # Mounting Nginx configuration files
+    networks:  # Changed to an array
+      - mysql-network  # Name of the network to connect to (defined later)
+
+networks:
+  mysql-network:  # Defining the network
+    name: mysql-network  # Name for the network
+    driver: bridge  # Network driver (bridge for standard network)
+
+
